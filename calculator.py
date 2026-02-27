@@ -7,8 +7,8 @@
 3. 捕获所有可能的异常，避免终端原生报错
 4. 增加退出机制，支持手动输入指令退出
 5. 优化用户交互提示，更友好的输入引导
+6. 修复乘方运算无返回结果问题，增加乘方异常捕获
 """
-
 # 导入sys库，用于安全退出程序（可选，也可使用return）
 import sys
 
@@ -43,15 +43,15 @@ def get_valid_number(prompt):
 def get_valid_operator():
     """
     封装运算符输入校验逻辑，兼容空格，支持退出
-    :return: str - 校验通过的运算符（+/-/*/）；None - 用户终止输入/选择退出
+    :return: str - 校验通过的运算符（+/-/*//**）；None - 用户终止输入/选择退出
     """
     # 定义合法运算符白名单
-    valid_operators = ["+", "-", "*", "/"]
+    valid_operators = ["+", "-", "*", "/", "**"]
     
     while True:
         try:
             # 获取输入并去除首尾空格（解决" + "被判定为无效的问题）
-            op = input("请输入运算符（+、-、*、/），输入q可退出：").strip()
+            op = input("请输入运算符（+、-、*、/，**），输入q可退出：").strip()
             
             # 支持退出指令
             if op.lower() in ["q", "quit", "exit", "退出"]:
@@ -88,6 +88,13 @@ def calculate(num1, op, num2):
         if abs(num2) < 1e-9:  # 绝对值小于10的-9次方，判定为0
             return "❌ 错误：除数不能为0！"
         return num1 / num2
+    # 修复乘方无返回问题 + 增加乘方异常捕获（负数开平方等）
+    elif op == "**":
+        try:
+            result = num1 ** num2
+            return result  # 核心修复：添加return返回乘方计算结果
+        except ValueError:
+            return "❌ 错误：乘方运算无效（如负数开平方）！"
 
 def main_calculator():
     """
@@ -95,7 +102,7 @@ def main_calculator():
     """
     print("=" * 30)
     print("     简易命令行计算器（优化版）")
-    print("📌 支持 + - * / 运算，输入q可随时退出")
+    print("📌 支持 + - * / ** 运算，输入q可随时退出")
     print("=" * 30)
     
     while True:  # 循环计算，直到用户主动退出
@@ -147,5 +154,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ 程序发生未预期错误：{str(e)}")
     finally:
-        # 无论是否异常，最终输出退出提示
+        # 无论是否异常，最终安全退出
         sys.exit(0)
